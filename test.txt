@@ -1,0 +1,86 @@
+Sub UpdateSQLFromCSV()
+    Dim conn As Object
+    Dim filePath As String
+    Dim fileNum As Integer
+    Dim lineData As String
+    Dim values() As String
+    Dim sql As String
+    Dim isFirstLine As Boolean
+    Dim connStr As String
+
+    ' === CONFIGURE THESE ===
+    filePath = "C:\Path\To\Your\File.csv" ' <<<< UPDATE this
+    connStr = "Provider=SQLOLEDB;Data Source=YourServer;Initial Catalog=YourDB;Integrated Security=SSPI;" ' <<<< UPDATE this
+
+    ' === Open DB Connection ===
+    Set conn = CreateObject("ADODB.Connection")
+    conn.Open connStr
+
+    ' === Drop #temp if exists (ignore errors) ===
+    On Error Resume Next
+    conn.Execute "DROP TABLE #temp"
+    On Error GoTo 0
+
+    ' === Create #temp table ===
+    sql = "CREATE TABLE #temp (" & _
+          "Ref VARCHAR(100), " & _
+          "isSACheck BIT, " & _
+          "CheckType VARCHAR(50), " & _
+          "bulkid INT, " & _
+          "lastupdatedby VARCHAR(50), " & _
+          "lastupdateddate DATETIME, " & _
+          "ITsToolId INT)"
+    conn.Execute sql
+
+    ' === Open and Read CSV File ===
+    fileNum = FreeFile
+    Open filePath For Input As #fileNum
+
+    isFirstLine = True
+
+    Do While Not EOF(fileNum)
+        Line Input #fileNum, lineData
+
+        ' Skip header row
+        If isFirstLine Then
+            isFirstLine = False
+            Continue Do
+        End If
+
+        values = Split(lineData, ",")
+
+        ' Assumes CSV has 7 columns: Ref, isSACheck, CheckType, bulkid, lastupdatedby, lastupdateddate, ITsToolId
+        If UBound(values) >= 6 Then
+            sql = "INSERT INTO #temp (Ref, isSACheck, CheckType, bulkid, lastupdatedby, lastupdateddate, ITsToolId) VALUES (" & _
+                  "'" & Replace(Trim(values(0)), "'", "''") & "', " & _
+                  IIf(Trim(values(1)) = "1" Or LCase(Trim(values(1))) = "true", 1, 0) & ", " & _
+                  "'" & Replace(Trim(values(2)), "'", "''") & "', " & _
+                  Val(Trim(values(3))) & ", " & _
+                  "'" & Replace(Trim(values(4)), "'", "''") & "', " & _
+                  "'" & Format(CDate(Trim(values(5))), "yyyy-mm-dd hh:nn:ss") & "', " & _
+                  Val(Trim(values(6))) & ")"
+
+            conn.Execute sql
+        End If
+    Loop
+
+    Close #fileNum
+
+    ' === Update Main SQL Table ===
+    sql = "UPDATE tgt SET " & _
+          "tgt.isSACheck = tmp.isSACheck, " & _
+          "tgt.CheckType = tmp.CheckType, " & _
+          "tgt.bulkid = tmp.bulkid, " & _
+          "tgt.lastupdatedby = tmp.lastupdatedby, " & _
+          "tgt.lastupdateddate = tmp.lastupdateddate, " & _
+          "tgt.ITsToolId = tmp.ITsToolId " & _
+          "FROM YourTargetTable tgt INNER JOIN #temp tmp ON tgt.Ref = tmp.Ref"
+    conn.Execute sql
+
+    ' === Clean up ===
+    conn.Close
+    Set conn = Nothing
+
+    MsgBox "Update complete."
+
+End Sub
