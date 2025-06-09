@@ -84,3 +84,51 @@ Sub UpdateSQLFromCSV()
     MsgBox "Update complete."
 
 End Sub
+
+
+
+Private Sub Command0_Click()
+ Dim filePath As String
+    Dim fileNum As Integer
+    Dim LineOfText As String
+    Dim RecordCount As Long
+
+    Dim line As String
+    Dim fields() As String
+  
+
+    filePath = "C:\TKEDoc\TempWork\DataImport.csv" ' Change to your actual file path
+    fileNum = FreeFile
+    
+    
+    
+    On Error GoTo ErrHandler
+        
+    Open filePath For Input As #fileNum
+    
+    RecordCount = 0
+    
+    ' Skip header row if present
+    Line Input #fileNum, LineOfText ' Uncomment this line if your CSV has headers
+    
+    Do While Not EOF(fileNum)
+        Line Input #fileNum, LineOfText
+        fields = Split(LineOfText, ",")
+        Debug.Print fields(0), fields(1), fields(2)
+        If Trim(LineOfText) <> "" Then
+            RecordCount = RecordCount + 1
+        End If
+    Loop
+    
+    Close #fileNum
+    
+    MsgBox "Total number of records: " & RecordCount
+
+    Exit Sub
+
+ErrHandler:
+    MsgBox "Error reading file: " & Err.Description
+    If fileNum > 0 Then Close #fileNum
+
+End Sub
+
