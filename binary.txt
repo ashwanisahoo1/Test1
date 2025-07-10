@@ -1,0 +1,40 @@
+Sub CountCSVRecords_UsingBinary()
+    Dim FileNum As Integer
+    Dim FilePath As String
+    Dim FileContent As String
+    Dim Lines() As String
+    Dim TotalRecords As Long
+    Dim i As Long
+
+    ' Update your file path here
+    FilePath = "C:\Path\To\Your\File.csv"
+    FileNum = FreeFile
+
+    ' Open the file in Binary mode and read entire content
+    Open FilePath For Binary As #FileNum
+    FileContent = Space$(LOF(FileNum))
+    Get #FileNum, , FileContent
+    Close #FileNum
+
+    ' Remove UTF-8 BOM if present
+    If Left(FileContent, 3) = ChrW(&HEF) & ChrW(&HBB) & ChrW(&HBF) Then
+        FileContent = Mid(FileContent, 4)
+    End If
+
+    ' Normalize line endings to vbLf (handles CRLF, CR, or LF)
+    FileContent = Replace(FileContent, vbCrLf, vbLf)
+    FileContent = Replace(FileContent, vbCr, vbLf)
+
+    ' Split into lines
+    Lines = Split(FileContent, vbLf)
+
+    ' Count non-empty lines excluding the header (first row)
+    TotalRecords = 0
+    For i = 1 To UBound(Lines) ' Start at 1 to skip header
+        If Trim(Lines(i)) <> "" Then
+            TotalRecords = TotalRecords + 1
+        End If
+    Next i
+
+    MsgBox "Total data records (excluding header): " & TotalRecords
+End Sub
