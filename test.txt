@@ -132,3 +132,17 @@ ErrHandler:
 
 End Sub
 
+
+------------------------
+
+SELECT DISTINCT a.SrcCDCustomerID, a.DateTaken
+FROM SRG_SrcCDDebt a
+JOIN SRG_SrcCDCustomer cust_148 ON a.SrcCDCustomerID = cust_148.SrcCDCustomerID
+JOIN SRG_SrcCDCustomer cust_149 
+    ON cust_148.CustomerID = cust_149.CustomerID
+    AND cust_148.AdviceID = cust_149.AdviceID
+    AND cust_148.SRCMasterID = 148
+    AND cust_149.SRCMasterID = 149
+WHERE a.SRCMasterID = 148;
+
+
