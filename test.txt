@@ -160,4 +160,25 @@ Left Join SRC_QC_ContactGroupQuestions cgq on cgq.QCContGroupID=pc.QCContGroupID
 Where P.CaseID = 75607 AND  qc.QCCaseID = '123'
 
 
+--------------------
+
+WITH cgq_deduped AS (
+  SELECT *, 
+         ROW_NUMBER() OVER (PARTITION BY QCContGroupID ORDER BY Grading DESC) AS rn
+  FROM SRC_QC_ContactGroupQuestions
+)
+
+SELECT ...
+FROM SRG_ProductCustomerGrouping p
+LEFT JOIN SRC_QC_CaseLevel qc ON p.CaseID = qc.CaseID
+LEFT JOIN SRC_QC_ContactGroup cg ON qc.QCCaseID = cg.QCCaseID
+LEFT JOIN SRG_Product pr ON p.ProductID = pr.ProductID
+LEFT JOIN SRC_QC_ProductOutcomes pc ON cg.QCContGroupID = pc.QCContGroupID
+LEFT JOIN cgq_deduped cgq ON cgq.QCContGroupID = pc.QCContGroupID AND cgq.rn = 1
+WHERE p.CaseID = 75607 AND qc.QCCaseID = '123'
+Option 2: Aggregate cgq before joining
+If 
+
+
+
 
