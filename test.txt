@@ -146,3 +146,18 @@ JOIN SRG_SrcCDCustomer cust_149
 WHERE a.SRCMasterID = 148;
 
 
+----------------
+
+SELECT COALESCE (pr.TopUpID, pr.RBS_Policy_Number, pr.UPID) AS TopUpID,cg.AdviceID,cg.ContactGroupID, pc.FROutcome, 
+pc.QCOutcome,qc.QcRAGRef,qc.SRCMasterID,qc.InitialLoadDate,qc.QCNameID,qc.QCTeamLeaderID,qc.DateQCCheckStarted, 
+qc.QCCheckType,qc.QCOverallGrade,qc.QcRAGVersion, qc.reworkrequired,qc.reworksummary ,
+cgq.Grading,cgq.Comments FROM SRG_ProductCustomerGrouping p 
+Left Join SRC_QC_CaseLevel qc on p.CaseID = qc.CaseID 
+Left Join SRC_QC_ContactGroup cg on qc.QCCaseID = cg.QCCaseID 
+Left join SRG_Product pr on p.ProductID=pr.ProductID 
+Left Join SRC_QC_ProductOutcomes pc on cg.QCContGroupID = pc.QCContGroupID 
+Left Join SRC_QC_ContactGroupQuestions cgq on cgq.QCContGroupID=pc.QCContGroupID 
+Where P.CaseID = 75607 AND  qc.QCCaseID = '123'
+
+
+
